@@ -1,3 +1,4 @@
 # Intro
 
-Notes of "Understanding Computation" by Tom Stuart.
+Notes and validations of [Understanding Computation](https://computationbook.com/) by Tom Stuart.
+
