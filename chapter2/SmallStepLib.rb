@@ -1,5 +1,3 @@
-require 'pry'
-
 class Number < Struct.new(:value)
   def to_s
     value.to_s
@@ -62,21 +60,6 @@ class Multiply < Struct.new(:left, :right)
   end
 end
 
-exp1 = Multiply.new(
-         Number.new(5),
-         Multiply.new(
-           Add.new(
-             Number.new(3),
-             Number.new(4)),
-           Number.new(23)))
-
-#puts exp1
-
-exp2 = Add.new(Multiply.new(Number.new(1), Number.new(3)),
-               Multiply.new(Number.new(5), Number.new(8)))
-
-#puts exp2
-
 class Machine
   def initialize(expression)
     @expr = expression
@@ -121,11 +104,40 @@ end
 # 只能通过 self.attr1, self.attr2 访问（也可以省略 self）
 # 不能用 @ 访问
 
-#Machine.new(
-  #Add.new(Multiply.new(Number.new(1), Number.new(2)),
-          #Multiply.new(Number.new(3), Number.new(4)))).run
+class Boolean < Struct.new(:value)
+  def to_s
+    value.to_s
+  end
 
-Machine2.new(
-  Add.new(Multiply.new(Number.new(1), Number.new(2)),
-          Multiply.new(Number.new(3), Number.new(4)))).run
+  def inspect
+    "《#{self}》"
+  end
 
+  def reducible?
+    false
+  end
+end
+
+class LessThan < Struct.new(:left, :right)
+  def to_s
+    "#{left} < #{right}"
+  end
+
+  def inspect
+    "《#{self}》"
+  end
+
+  def reducible?
+    true
+  end
+
+  def reduce
+    if left.reducible?
+      LessThan.new(left.reduce, right)
+    elsif right.reducible?
+      LessThan.new(left, right.reduce)
+    else
+      Boolean.new(left.value < right.value)
+    end
+  end
+end
