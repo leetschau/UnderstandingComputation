@@ -1,4 +1,12 @@
 class Number < Struct.new(:value)
+  def to_s
+    value.to_s
+  end
+
+  def inspect
+    "《#{self}》"
+  end
+
   def to_ruby
     "-> e { #{value.inspect} }"
     # A Ruby lambda string, where "e" is the parameter of
@@ -8,6 +16,14 @@ class Number < Struct.new(:value)
 end
 
 class Boolean < Struct.new(:value)
+  def to_s
+    value.to_s
+  end
+
+  def inspect
+    "《#{self}》"
+  end
+
   def to_ruby
     "-> e { #{value.inspect} }"
   end
@@ -90,5 +106,96 @@ p proc3
 p proc4
 p eval(proc3).call(env)
 p eval(proc4).call(env)
+puts "----------"
 
+class Assign < Struct.new(:name, :expression)
+  def to_s
+    "#{name} := #{expression}"
+  end
 
+  def inspect
+    "《#{self}》"
+  end
+  def to_ruby
+    "-> e { e.merge({ #{name.inspect} => (#{expression.to_ruby}).call(e) }) }"
+  end
+end
+
+statement = Assign.new(:y, Add.new(Variable.new(:x), Number.new(1)))
+p statement
+p statement.to_ruby
+proc5 = eval(statement.to_ruby)
+p proc5.call({x: 3})
+puts "----------"
+
+class DoNothing
+  def to_s
+    "do-nothing"
+  end
+
+  def inspect
+    "《#{self}》"
+  end
+
+  def to_ruby
+    "-> e { e }"
+  end
+end
+
+class If < Struct.new(:condition, :consequence, :alternative)
+  def to_s
+    "if #{condition} then #{consequence} else #{alternative}"
+  end
+
+  def inspect
+    "《#{self}》"
+  end
+
+  def to_ruby
+    "-> e { if (#{condition.to_ruby}).call(e)" +
+        " then (#{consequence.to_ruby}).call(e)" +
+        " else (#{alternative.to_ruby}).call(e)" +
+        " end }"
+  end
+end
+
+class Sequence < Struct.new(:first, :second)
+  def to_s
+    "Seq: #{first} and #{second}"
+  end
+
+  def inspect
+    "《#{self}》"
+  end
+
+  def to_ruby
+    "-> e { (#{second.to_ruby}).call((#{first.to_ruby}).call(e)) }"
+  end
+end
+
+class While < Struct.new(:condition, :body)
+  def to_s
+    "while #{condition} { #{body} }"
+  end
+
+  def inspect
+    "《#{self}》"
+  end
+
+  def to_ruby
+    "-> e {" +
+      " while (#{condition.to_ruby}).call(e); e = (#{body.to_ruby}).call(e); end;" +
+      " e" +
+      " }"
+  end
+end
+
+statement = While.new(
+  LessThan.new(Variable.new(:x), Number.new(5)),
+  Assign.new(:x, Multiply.new(Variable.new(:x), Number.new(3)))
+)
+
+p statement
+p statement.to_ruby
+proc6 = eval(statement.to_ruby)
+p proc6.call({x:1})
