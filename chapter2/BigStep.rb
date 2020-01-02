@@ -172,6 +172,7 @@ class While < Struct.new(:condition, :body)
     when Boolean.new(true)
       #puts "condition true, re-evaluate"
       evaluate(body.evaluate(environment))
+      # 递归调用自身，但每次调用时，使用 `body.evaluate` 改变环境
     when Boolean.new(false)
       environment
     end
